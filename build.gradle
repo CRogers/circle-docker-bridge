@@ -1,3 +1,7 @@
+plugins {
+    id 'org.inferred.processors' version '1.2.15'
+}
+
 apply plugin: 'java'
 
 repositories {
@@ -8,6 +12,13 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'org.slf4j:slf4j-simple:1.7.25'
     compile 'org.zeroturnaround:zt-exec:1.10'
+
+    processor 'org.derive4j:derive4j:0.12.4'
+    processor 'org.immutables:value:2.6.1'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:3.10.0'
+
 }
 
 jar {
