@@ -5,10 +5,7 @@ repositories {
 }
 
 dependencies {
-    compile (
-            'com.spotify:docker-client:8.11.7',
-            'org.slf4j:slf4j-simple:1.7.25'
-    )
+    compile 'org.slf4j:slf4j-simple:1.7.25'
 }
 
 jar {
@@ -21,7 +18,4 @@ jar {
             configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
         }
     }
-
-    // https://stackoverflow.com/questions/999489/invalid-signature-file-when-attempting-to-run-a-jar
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
 }
