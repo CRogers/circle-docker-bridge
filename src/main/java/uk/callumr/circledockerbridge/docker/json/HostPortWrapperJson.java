@@ -1,12 +1,15 @@
 package uk.callumr.circledockerbridge.docker.json;
 
-import com.google.gson.annotations.SerializedName;
-import org.immutables.gson.Gson;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.immutables.value.Value;
+import uk.callumr.circledockerbridge.docker.HostPort;
 
 @Value.Immutable
-@Gson.TypeAdapters
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonDeserialize(as = ImmutableHostPortWrapperJson.class)
 public interface HostPortWrapperJson {
-    @SerializedName("HostPort")
-    String hostPort();
+    @JsonProperty("HostPort")
+    HostPort hostPort();
 }

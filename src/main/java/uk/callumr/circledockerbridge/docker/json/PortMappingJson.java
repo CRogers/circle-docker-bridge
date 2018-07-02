@@ -1,21 +1,26 @@
 package uk.callumr.circledockerbridge.docker.json;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapterFactory;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import one.util.streamex.EntryStream;
-import org.immutables.gson.Gson.TypeAdapters;
 import org.immutables.value.Value;
 import uk.callumr.circledockerbridge.docker.ContainerPort;
 import uk.callumr.circledockerbridge.docker.HostPort;
 import uk.callumr.circledockerbridge.docker.PortMapping;
 
+import java.io.IOException;
 import java.util.*;
 
 @Value.Immutable
-@TypeAdapters
+@JsonDeserialize(as = ImmutablePortMappingJson.class)
 public abstract class PortMappingJson {
-    protected abstract Map<String, Optional<List<HostPortWrapperJson>>> ports();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModule(new Jdk8Module());
+
+    @JsonValue
+    protected abstract Map<ContainerPort, Optional<List<HostPortWrapperJson>>> ports();
 
     @Value.Lazy
     protected PortMapping portMapping() {
@@ -24,8 +29,6 @@ public abstract class PortMappingJson {
                 .invert()
                 .flatMapKeys(Collection::stream)
                 .mapKeys(HostPortWrapperJson::hostPort)
-                .mapKeys(HostPort::fromString)
-                .mapValues(ContainerPort::fromBindingSpec)
                 .toMap();
 
         return PortMapping.builder()
@@ -34,14 +37,11 @@ public abstract class PortMappingJson {
     }
 
     public static PortMapping fromDockerJson(String json) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {
-            gsonBuilder.registerTypeAdapterFactory(factory);
+        try {
+            PortMappingJson portMappingJson = OBJECT_MAPPER.readValue(json, PortMappingJson.class);
+            return portMappingJson.portMapping();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        Gson gson = gsonBuilder.create();
-
-        PortMappingJson portMappingJson = gson.fromJson(json, PortMappingJson.class);
-        return portMappingJson.portMapping();
     }
 }
