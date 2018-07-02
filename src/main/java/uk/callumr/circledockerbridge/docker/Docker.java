@@ -15,16 +15,22 @@ import java.util.stream.Stream;
 public class Docker {
     private static Logger log = LoggerFactory.getLogger(Docker.class);
 
-    public Stream<ContainerEvent> createdAndDestroyedContainers() throws IOException {
-        Process process = new ProcessBuilder()
-                .command(
-                        "docker",
-                        "events",
-                        "--format", "{{.Status}},{{.ID}}",
-                        "-f", "event=create",
-                        "-f", "event=destroy",
-                        "-f", "type=container")
-                .start();
+    public Stream<ContainerEvent> createdAndDestroyedContainers() {
+        Process process;
+
+        try {
+            process = new ProcessBuilder()
+                    .command(
+                            "docker",
+                            "events",
+                            "--format", "{{.Status}},{{.ID}}",
+                            "-f", "event=create",
+                            "-f", "event=destroy",
+                            "-f", "type=container")
+                    .start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         return new BufferedReader(new InputStreamReader(process.getInputStream()))
                 .lines()
@@ -44,15 +50,21 @@ public class Docker {
                 });
     }
 
-    public PortMapping exposedPortsForContainer(ContainerId containerId) throws InterruptedException, TimeoutException, IOException {
-        ProcessResult processResult = new ProcessExecutor()
-                .command(
-                        "docker",
-                        "inspect",
-                        "--format", "{{json .NetworkSettings.Ports}}",
-                        containerId.id())
-                .readOutput(true)
-                .execute();
+    public PortMapping exposedPortsForContainer(ContainerId containerId) {
+        ProcessResult processResult;
+
+        try {
+            processResult = new ProcessExecutor()
+                    .command(
+                            "docker",
+                            "inspect",
+                            "--format", "{{json .NetworkSettings.Ports}}",
+                            containerId.id())
+                    .readOutput(true)
+                    .execute();
+        } catch (IOException | InterruptedException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
 
         return PortMappingJson.fromDockerJson(processResult.outputUTF8());
     }

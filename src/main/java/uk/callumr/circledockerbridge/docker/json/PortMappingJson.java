@@ -37,8 +37,6 @@ public abstract class PortMappingJson {
     }
 
     public static PortMapping fromDockerJson(String json) {
-        System.out.println("json = " + json);
-
         try {
             PortMappingJson portMappingJson = OBJECT_MAPPER.readValue(json, PortMappingJson.class);
             return portMappingJson.portMapping();
