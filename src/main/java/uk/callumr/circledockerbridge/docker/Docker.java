@@ -2,10 +2,14 @@ package uk.callumr.circledockerbridge.docker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import uk.callumr.circledockerbridge.docker.json.PortMappingJson;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 public class Docker {
@@ -38,5 +42,18 @@ public class Docker {
                             return Stream.empty();
                     }
                 });
+    }
+
+    public PortMapping exposedPortsForContainer(ContainerId containerId) throws InterruptedException, TimeoutException, IOException {
+        ProcessResult processResult = new ProcessExecutor()
+                .command(
+                        "docker",
+                        "inspect",
+                        "--format", "{{json .NetworkSettings.Ports}}",
+                        containerId.id())
+                .readOutput(true)
+                .execute();
+
+        return PortMappingJson.fromDockerJson(processResult.outputUTF8());
     }
 }
