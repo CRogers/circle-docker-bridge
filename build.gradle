@@ -12,12 +12,12 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'org.slf4j:slf4j-simple:1.7.25'
     compile 'org.zeroturnaround:zt-exec:1.10'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.6'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.6'
+    compile 'com.google.code.gson:gson:2.8.5'
     compile 'one.util:streamex:0.6.7'
 
     processor 'org.derive4j:derive4j:0.12.4'
     processor 'org.immutables:value:2.6.1'
+    processor 'org.immutables:gson:2.6.1'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.10.0'
