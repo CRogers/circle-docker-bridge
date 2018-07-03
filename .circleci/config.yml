@@ -94,7 +94,7 @@ jobs:
           - v1-dependencies-test-
           - v1-dependencies-
 
-      - run: ./gradlew --no-daemon test
+      - run: ./gradlew --no-daemon -i test
 
       - save_cache:
           paths:
