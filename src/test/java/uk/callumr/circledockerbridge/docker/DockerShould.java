@@ -41,6 +41,8 @@ public class DockerShould {
                 "crogers/exposed-port-not-opened-behind-it",
                 "sleep", "999999999");
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> killContainer(containerId)));
+
         try {
             PortMapping portMapping = docker.exposedPortsForContainer(containerId);
 
@@ -75,11 +77,15 @@ public class DockerShould {
         return containerId;
     }
 
-    private void killContainer(ContainerId containerId) throws IOException, InterruptedException, TimeoutException {
-        new ProcessExecutor()
-                .command("docker", "kill", containerId.id())
-                .exitValue(0)
-                .execute();
+    private void killContainer(ContainerId containerId) {
+        try {
+            new ProcessExecutor()
+                    .command("docker", "kill", containerId.id())
+                    .exitValue(0)
+                    .execute();
+        } catch (IOException | InterruptedException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
 
         log.info("Kill container with id '{}'", containerId.id());
     }

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
-import uk.callumr.circledockerbridge.docker.json.PortMappingJson;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -66,6 +65,6 @@ public class Docker {
             throw new RuntimeException(e);
         }
 
-        return PortMappingJson.fromDockerJson(processResult.outputUTF8());
+        return PortMapping.fromDockerJson(processResult.outputUTF8());
     }
 }
