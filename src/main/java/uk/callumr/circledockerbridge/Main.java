@@ -45,12 +45,3 @@ public class Main {
 
 // docker events -f 'event=create' -f event=destroy
 // Get host ports   docker inspect --format='{{range $p, $conf := .NetworkSettings.Ports}}{{(index $conf 0).HostPort}} {{end}}'
-
-/*
-docker run -it -v $(pwd):/project --rm tenshi/graalvm-native-image \
-  --verbose \
-  -cp build/libs/circle-docker-bridge.jar \
-  -H:Name=app \
-  -H:Class=uk.callumr.circledockerbridge.Main \
-  --static
- */
