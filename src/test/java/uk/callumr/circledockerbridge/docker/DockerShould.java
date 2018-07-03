@@ -56,35 +56,52 @@ public class DockerShould {
         }
     }
 
-    private ContainerId dockerRun(String... args) throws IOException, InterruptedException, TimeoutException {
+    @Test
+    public void get_the_network_used_by_a_docker_container() {
+//        dockerRun("busybox", )
+    }
+
+    private ContainerId dockerRun(String... args) {
         List<String> command = Stream.concat(
-                Stream.of("docker", "run", "-d", "--rm"),
+                Stream.of("run", "-d", "--rm"),
                 Arrays.stream(args)
         ).collect(Collectors.toList());
 
-        ProcessResult processResult = new ProcessExecutor()
-                .command(command)
-                .readOutput(true)
-                .redirectErrorStream(false)
-                .exitValue(0)
-                .execute();
-
-        ContainerId containerId = ContainerId.of(processResult.outputUTF8().trim());
+        ContainerId containerId = ContainerId.of(docker(false, command));
 
         log.info("Created container with id '{}'", containerId.id());
 
         return containerId;
     }
 
-    private void killContainer(ContainerId containerId) {
+    private String docker(boolean includeError, List<String> args) {
+        List<String> command = Stream.concat(
+                Stream.of("docker"),
+                args.stream()
+        ).collect(Collectors.toList());
+
+        ProcessResult processResult;
+
         try {
-            new ProcessExecutor()
-                    .command("docker", "kill", containerId.id())
+            processResult = new ProcessExecutor()
+                    .command(command)
+                    .readOutput(true)
+                    .redirectErrorStream(includeError)
                     .exitValue(0)
                     .execute();
         } catch (IOException | InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         }
+
+        return processResult.outputUTF8().trim();
+    }
+
+    private String docker(boolean includeError, String... args) {
+        return docker(includeError, Arrays.asList(args));
+    }
+
+    private void killContainer(ContainerId containerId) {
+        docker(true, "kill", containerId.id());
 
         log.info("Kill container with id '{}'", containerId.id());
     }
