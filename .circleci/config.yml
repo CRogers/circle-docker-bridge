@@ -110,6 +110,6 @@ workflows:
       - compile-native-image:
           requires:
             - jar
-      - test:
+      - test-jvm:
           requires:
             - jar
