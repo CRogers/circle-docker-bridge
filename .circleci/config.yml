@@ -47,10 +47,12 @@ jobs:
       TERM: dumb
 
     steps:
-      - checkout
-
       - attach_workspace:
           at: .
+
+      - run:
+          name: Ensure output dir exists
+          command: mkdir -p build/native
 
       - run:
           name: Compile native image
@@ -59,8 +61,13 @@ jobs:
             --verbose
             --static
             -cp build/libs/circle-docker-bridge.jar
-            -H:Name=app
+            -H:Name=build/native/circle-docker-bridge
             -H:Class=uk.callumr.circledockerbridge.Main
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/native
 
 
 workflows:

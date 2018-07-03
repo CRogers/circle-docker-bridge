@@ -39,9 +39,11 @@ task compileToNativeApp(type: Exec, dependsOn: jar) {
     commandLine 'docker', 'run', '-i', '-v', "${projectDir}:/project", '--rm', 'tenshi/graalvm-native-image',
             '--verbose',
             '-cp', 'build/libs/circle-docker-bridge.jar',
-            '-H:Name=app',
+            '-H:Name=build/native/circle-docker-bridge',
             '-H:Class=uk.callumr.circledockerbridge.Main',
             '--static'
 
-
+    doFirst {
+        file("build/native").mkdirs()
+    }
 }
