@@ -1,5 +1,6 @@
 package uk.callumr.circledockerbridge.docker;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -60,11 +61,35 @@ public class Docker {
                             "--format", "{{json .NetworkSettings.Ports}}",
                             containerId.id())
                     .readOutput(true)
+                    .exitValue(0)
                     .execute();
         } catch (IOException | InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         }
 
         return PortMapping.fromDockerJson(processResult.outputUTF8());
+    }
+
+    public NetworkAlias networkForContainer(ContainerId containerId) {
+        try {
+            ProcessResult processResult = new ProcessExecutor()
+                    .command(
+                            "docker",
+                            "inspect",
+                            "--format", "{{json .NetworkSettings.Networks}}",
+                            containerId.id())
+                    .readOutput(true)
+                    .exitValue(0)
+                    .execute();
+
+            String networkAlias = new ObjectMapper().readTree(processResult.outputUTF8())
+                    .fields().next()
+                    .getKey();
+
+            return NetworkAlias.of(networkAlias);
+        } catch (IOException | InterruptedException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

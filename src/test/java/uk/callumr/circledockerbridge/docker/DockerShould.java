@@ -9,6 +9,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -58,7 +59,20 @@ public class DockerShould {
 
     @Test
     public void get_the_network_used_by_a_docker_container() {
-//        dockerRun("busybox", )
+        NetworkAlias networkAlias = NetworkAlias.of(UUID.randomUUID().toString().substring(0, 6));
+        docker(true, "network", "create", networkAlias.alias());
+
+        ContainerId containerId = null;
+        try {
+            containerId = dockerRun("--network", networkAlias.alias(), "busybox", "sleep", "999999");
+
+            assertThat(docker.networkForContainer(containerId)).isEqualTo(networkAlias);
+        } finally {
+            if (containerId != null) {
+                killContainer(containerId);
+                docker(true, "network", "rm", networkAlias.alias());
+            }
+        }
     }
 
     private ContainerId dockerRun(String... args) {
