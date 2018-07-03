@@ -69,6 +69,35 @@ jobs:
           paths:
             - build/native
 
+  test-jvm:
+    docker:
+      - image: circleci/openjdk:8-jdk
+
+    working_directory: ~/repo
+
+    environment:
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+
+    steps:
+      - checkout
+
+      - setup_remote_docker
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-test-{{ checksum "build.gradle" }}
+          - v1-dependencies-{{ checksum "build.gradle" }}
+          - v1-dependencies-test-
+          - v1-dependencies-
+
+      - run: ./gradlew test
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-test-{{ checksum "build.gradle" }}
+
 
 workflows:
   version: 2
