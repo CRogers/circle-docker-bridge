@@ -37,8 +37,8 @@ jobs:
   compile-native-image:
     docker:
       - image: tenshi/graalvm-native-image
-        entrypoint: /bin/bash
-        command: /bin/bash
+        entrypoint:
+        command: /bin/sh
 
     working_directory: ~/repo
 
