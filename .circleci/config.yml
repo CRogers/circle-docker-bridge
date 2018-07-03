@@ -94,7 +94,7 @@ jobs:
           - v1-dependencies-test-
           - v1-dependencies-
 
-      - run: ./gradlew test
+      - run: ./gradlew --no-daemon test
 
       - save_cache:
           paths:
@@ -110,6 +110,4 @@ workflows:
       - compile-native-image:
           requires:
             - jar
-      - test-jvm:
-          requires:
-            - jar
+      - test-jvm
