@@ -84,6 +84,9 @@ jobs:
 
       - setup_remote_docker
 
+      - attach_workspace:
+          at: .
+
       - restore_cache:
           keys:
           - v1-dependencies-test-{{ checksum "build.gradle" }}
@@ -105,5 +108,8 @@ workflows:
     jobs:
       - jar
       - compile-native-image:
+          requires:
+            - jar
+      - test:
           requires:
             - jar
