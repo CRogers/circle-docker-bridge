@@ -22,7 +22,7 @@ jobs:
           - v1-dependencies-{{ checksum "build.gradle" }}
           - v1-dependencies-
 
-      - run: ./gradlew jar
+      - run: ./gradlew --no-daemon jar
 
       - save_cache:
           paths:
