@@ -1,0 +1,73 @@
+# Java Gradle CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2
+jobs:
+  jar:
+    docker:
+      - image: circleci/openjdk:8-jdk
+
+    working_directory: ~/repo
+
+    environment:
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "build.gradle" }}
+          - v1-dependencies-
+
+      - run: ./gradlew jar
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/libs
+
+  compile-native-image:
+    docker:
+      - image: tenshi/graalvm-native-image
+        entrypoint: /bin/bash
+        command: /bin/bash
+
+    working_directory: ~/repo
+
+    environment:
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: Compile native image
+          command: >
+            /usr/lib/graalvm/bin/native-image
+            --verbose
+            --static
+            -cp build/libs/circle-docker-bridge.jar
+            -H:Name=app
+            -H:Class=uk.callumr.circledockerbridge.Main
+
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - jar
+      - compile-native-image:
+          requires:
+            - jar
