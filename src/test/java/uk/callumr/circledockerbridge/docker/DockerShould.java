@@ -54,7 +54,6 @@ public class DockerShould {
         } finally {
             killContainer(containerId);
         }
-
     }
 
     private ContainerId dockerRun(String... args) throws IOException, InterruptedException, TimeoutException {

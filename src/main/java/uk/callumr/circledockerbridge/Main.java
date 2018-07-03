@@ -6,11 +6,23 @@ import uk.callumr.circledockerbridge.docker.ContainerEvents;
 import uk.callumr.circledockerbridge.docker.Docker;
 import uk.callumr.circledockerbridge.docker.PortMapping;
 
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 public class Main {
     private static Logger log = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String... args) {
+    public static void main(String... args) throws IOException {
         log.info("Started");
+
+        try (ServerSocket waitSocket = new ServerSocket(6789);
+             Socket socket = waitSocket.accept()) {
+
+            new BufferedReader(new InputStreamReader(socket.getInputStream())).readLine();
+
+            new DataOutputStream(socket.getOutputStream()).writeUTF("yay!\n");
+        }
 
         Docker docker = new Docker();
 
