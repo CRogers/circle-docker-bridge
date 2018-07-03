@@ -13,7 +13,6 @@ dependencies {
     compile 'org.slf4j:slf4j-simple:1.7.25'
     compile 'org.zeroturnaround:zt-exec:1.10'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.6'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.6'
     compile 'one.util:streamex:0.6.7'
 
     processor 'org.derive4j:derive4j:0.12.4'

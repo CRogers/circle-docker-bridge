@@ -1,6 +1,5 @@
 package uk.callumr.circledockerbridge.docker;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -13,7 +12,6 @@ public interface HostPort {
                 .build();
     }
 
-    @JsonCreator
     static HostPort fromString(String portNumberString) {
         return of(Integer.parseInt(portNumberString));
     }

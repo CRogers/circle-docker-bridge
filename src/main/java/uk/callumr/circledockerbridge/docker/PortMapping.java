@@ -2,7 +2,6 @@ package uk.callumr.circledockerbridge.docker;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import one.util.streamex.EntryStream;
 import one.util.streamex.StreamEx;
 import org.immutables.value.Value;
@@ -16,8 +15,7 @@ import java.util.stream.Collectors;
 
 @Value.Immutable
 public abstract class PortMapping {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .registerModule(new Jdk8Module());
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     protected abstract Map<HostPort, ContainerPort> ports();
 
