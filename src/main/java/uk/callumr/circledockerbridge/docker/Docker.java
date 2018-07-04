@@ -10,7 +10,10 @@ import org.zeroturnaround.exec.ProcessResult;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Docker {
@@ -68,27 +71,11 @@ public class Docker {
     }
 
     public void createNetwork(NetworkAlias networkAlias) {
-        try {
-            new ProcessExecutor()
-                    .command("docker", "network", "create", networkAlias.alias())
-                    .exitValue(0)
-                    .readOutput(true)
-                    .execute();
-        } catch (IOException | InterruptedException | TimeoutException e) {
-            throw new RuntimeException(e);
-        }
+        docker("network", "create", networkAlias.alias());
     }
 
     public void connectContainerToNetwork(ContainerId containerId, NetworkAlias networkAlias) {
-        try {
-            new ProcessExecutor()
-                    .command("docker", "network", "connect", networkAlias.alias(), containerId.id())
-                    .exitValue(0)
-                    .readOutput(true)
-                    .execute();
-        } catch (IOException | InterruptedException | TimeoutException e) {
-            throw new RuntimeException(e);
-        }
+        docker("network", "connect", networkAlias.alias(), containerId.id());
     }
 
     public NetworkScopedIpAddress ipAddressForContainerInNetwork(ContainerId containerId, NetworkAlias networkAlias) {
@@ -97,18 +84,25 @@ public class Docker {
     }
 
     private String inspectContainer(ContainerId containerId, String format) {
-        try {
-            ProcessResult processResult = new ProcessExecutor()
-                    .command(
-                            "docker",
-                            "inspect",
-                            "--format", format,
-                            containerId.id())
-                    .readOutput(true)
-                    .exitValue(0)
-                    .execute();
+        return docker(
+                "inspect",
+                "--format", format,
+                containerId.id()).outputUTF8().trim();
+    }
 
-            return processResult.outputUTF8().trim();
+    private ProcessResult docker(String... args) {
+        try {
+
+            List<String> command = Stream.concat(
+                    Stream.of("docker"),
+                    Arrays.stream(args)
+            ).collect(Collectors.toList());
+
+            return new ProcessExecutor()
+                    .command(command)
+                    .exitValue(0)
+                    .readOutput(true)
+                    .execute();
         } catch (IOException | InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         }
