@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import uk.callumr.circledockerbridge.docker.ContainerId;
-import uk.callumr.circledockerbridge.docker.HostPort;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -12,16 +11,20 @@ import java.net.URL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CircleDockerBridgeShould {
-    private static final int PORT_DIFFERENCE = 10000;
+public abstract class CircleDockerBridgeShould {
 
-    private final CircleDockerBridge circleDockerBridge = new CircleDockerBridge(HostPort.map(port -> port - PORT_DIFFERENCE));
+
+    protected abstract void startBridge();
+
+    protected abstract int portMadeFor(int port);
 
     @Test
     public void expose_a_port_with_a_host_port_exposed_that_can_be_used_to_talk_to_the_container() throws InterruptedException {
-        new Thread(circleDockerBridge::start).start();
+        startBridge();
 
         Thread.sleep(1000);
+
+        int originalHostPort = 39888;
 
         ContainerId containerId = DockerTestUtils.dockerRun("-p", "39888:8000", "skyscanner/httpbin");
 
@@ -29,7 +32,7 @@ public class CircleDockerBridgeShould {
             try {
                 Thread.sleep(1000);
 
-                HttpURLConnection httpGet = (HttpURLConnection) new URL("http://localhost:29888/get?yolo=hi").openConnection();
+                HttpURLConnection httpGet = (HttpURLConnection) new URL(String.format("http://localhost:%d/get?yolo=hi", portMadeFor(originalHostPort))).openConnection();
                 String response = IOUtils.toString(httpGet.getInputStream());
                 String yoloValue = new ObjectMapper().readTree(response)
                         .get("args")
