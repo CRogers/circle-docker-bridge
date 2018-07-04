@@ -1,27 +1,20 @@
 package uk.callumr.circledockerbridge.docker;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
+import uk.callumr.circledockerbridge.DockerTestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DockerShould {
-    private static final Logger log = LoggerFactory.getLogger(DockerShould.class);
 
     private final Docker docker = new Docker();
 
@@ -29,7 +22,7 @@ public class DockerShould {
     public void produce_events_when_a_container_is_created_and_destroyed() throws InterruptedException, IOException, TimeoutException {
         Stream<ContainerEvent> events = docker.createdAndDestroyedContainers();
 
-        ContainerId containerId = dockerRun("busybox", "true");
+        ContainerId containerId = DockerTestUtils.dockerRun("busybox", "true");
 
         assertThat(events.limit(2)).containsExactly(
                 ContainerEvents.created(containerId),
@@ -39,14 +32,14 @@ public class DockerShould {
 
     @Test
     public void get_the_exposed_ports_for_a_container() throws InterruptedException, TimeoutException, IOException {
-        ContainerId containerId = dockerRun(
+        ContainerId containerId = DockerTestUtils.dockerRun(
                 "-p", "23499:4777",
                 "-p", "41119:2000",
                 "-p", "31313:2000",
                 "crogers/exposed-port-not-opened-behind-it",
                 "sleep", "999999999");
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> killContainer(containerId)));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> DockerTestUtils.killContainer(containerId)));
 
         try {
             PortMapping portMapping = docker.exposedPortsForContainer(containerId);
@@ -57,7 +50,7 @@ public class DockerShould {
                     .putPorts(HostPort.of(31313), ContainerPort.of(2000))
                     .build());
         } finally {
-            killContainer(containerId);
+            DockerTestUtils.killContainer(containerId);
         }
     }
 
@@ -75,9 +68,9 @@ public class DockerShould {
         docker.createNetwork(networkAlias);
 
         try {
-            assertThat(docker(true, "network", "ls")).contains(networkAlias.alias());
+            assertThat(DockerTestUtils.docker(true, "network", "ls")).contains(networkAlias.alias());
         } finally {
-            removeNetwork(networkAlias);
+            DockerTestUtils.removeNetwork(networkAlias);
         }
     }
 
@@ -88,13 +81,13 @@ public class DockerShould {
 
         ContainerId containerId = null;
         try {
-            containerId = dockerRun("busybox", "sleep", "99999999");
+            containerId = DockerTestUtils.dockerRun("busybox", "sleep", "99999999");
             docker.connectContainerToNetwork(containerId, networkAlias);
         } finally {
             if (containerId != null) {
-                killContainer(containerId);
+                DockerTestUtils.killContainer(containerId);
             }
-            removeNetwork(networkAlias);
+            DockerTestUtils.removeNetwork(networkAlias);
         }
     }
 
@@ -114,12 +107,12 @@ public class DockerShould {
         docker.createNetwork(networkAlias);
         docker.removeNetwork(networkAlias);
 
-        assertThat(docker(true, "network", "ls")).doesNotContain(networkAlias.alias());
+        assertThat(DockerTestUtils.docker(true, "network", "ls")).doesNotContain(networkAlias.alias());
     }
 
     @Test
     public void exec_a_command_in_a_container_and_get_back_stdout_stdin() {
-        ContainerId containerId = dockerRun("busybox", "sleep", "999999");
+        ContainerId containerId = DockerTestUtils.dockerRun("busybox", "sleep", "999999");
 
         try {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -127,74 +120,26 @@ public class DockerShould {
             docker.exec(containerId, output, input, "cat");
             assertThat(new String(output.toByteArray(), StandardCharsets.UTF_8)).isEqualTo("yolo");
         } finally {
-            killContainer(containerId);
+            DockerTestUtils.killContainer(containerId);
         }
     }
 
     private void withContainerConnectedToNetwork(NetworkAlias networkAlias, Consumer<ContainerId> containerConsumer) {
-        docker(true, "network", "create", networkAlias.alias());
+        DockerTestUtils.docker(true, "network", "create", networkAlias.alias());
         ContainerId containerId = null;
         try {
-            containerId = dockerRun("--network", networkAlias.alias(), "busybox", "sleep", "999999");
+            containerId = DockerTestUtils.dockerRun("--network", networkAlias.alias(), "busybox", "sleep", "999999");
             containerConsumer.accept(containerId);
         } finally {
             if (containerId != null) {
-                killContainer(containerId);
+                DockerTestUtils.killContainer(containerId);
             }
-            removeNetwork(networkAlias);
+            DockerTestUtils.removeNetwork(networkAlias);
         }
-    }
-
-    private String removeNetwork(NetworkAlias networkAlias) {
-        return docker(true, "network", "rm", networkAlias.alias());
     }
 
     private String randomString() {
         return UUID.randomUUID().toString().substring(0, 6);
     }
 
-    private ContainerId dockerRun(String... args) {
-        List<String> command = Stream.concat(
-                Stream.of("run", "-d", "--rm"),
-                Arrays.stream(args)
-        ).collect(Collectors.toList());
-
-        ContainerId containerId = ContainerId.of(docker(false, command));
-
-        log.info("Created container with id '{}'", containerId.id());
-
-        return containerId;
-    }
-
-    private String docker(boolean includeError, List<String> args) {
-        List<String> command = Stream.concat(
-                Stream.of("docker"),
-                args.stream()
-        ).collect(Collectors.toList());
-
-        ProcessResult processResult;
-
-        try {
-            processResult = new ProcessExecutor()
-                    .command(command)
-                    .readOutput(true)
-                    .redirectErrorStream(includeError)
-                    .exitValue(0)
-                    .execute();
-        } catch (IOException | InterruptedException | TimeoutException e) {
-            throw new RuntimeException(e);
-        }
-
-        return processResult.outputUTF8().trim();
-    }
-
-    private String docker(boolean includeError, String... args) {
-        return docker(includeError, Arrays.asList(args));
-    }
-
-    private void killContainer(ContainerId containerId) {
-        docker(true, "kill", containerId.id());
-
-        log.info("Kill container with id '{}'", containerId.id());
-    }
 }
