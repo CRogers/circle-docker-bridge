@@ -59,7 +59,7 @@ public class DockerShould {
 
     @Test
     public void get_the_network_used_by_a_docker_container() {
-        NetworkAlias networkAlias = NetworkAlias.of(UUID.randomUUID().toString().substring(0, 6));
+        NetworkAlias networkAlias = NetworkAlias.of(randomString());
         docker(true, "network", "create", networkAlias.alias());
 
         ContainerId containerId = null;
@@ -70,9 +70,29 @@ public class DockerShould {
         } finally {
             if (containerId != null) {
                 killContainer(containerId);
-                docker(true, "network", "rm", networkAlias.alias());
+                removeNetwork(networkAlias);
             }
         }
+    }
+
+    @Test
+    public void create_a_network() {
+        NetworkAlias networkAlias = NetworkAlias.of(randomString());
+        try {
+            docker.createNetwork(networkAlias);
+
+            assertThat(docker(true, "network", "ls")).contains(networkAlias.alias());
+        } finally {
+            removeNetwork(networkAlias);
+        }
+    }
+
+    private String removeNetwork(NetworkAlias networkAlias) {
+        return docker(true, "network", "rm", networkAlias.alias());
+    }
+
+    private String randomString() {
+        return UUID.randomUUID().toString().substring(0, 6);
     }
 
     private ContainerId dockerRun(String... args) {
