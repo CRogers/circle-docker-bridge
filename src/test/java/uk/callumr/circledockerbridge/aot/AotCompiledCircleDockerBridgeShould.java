@@ -15,7 +15,7 @@ public class AotCompiledCircleDockerBridgeShould extends CircleDockerBridgeShoul
     protected void startBridge() {
         try {
             new ProcessExecutor()
-                    .command("build/native/circle-docker-brige")
+                    .command("build/native/circle-docker-bridge")
                     .exitValue(0)
                     .redirectOutput(new Slf4jInfoOutputStream(log))
                     .redirectError(new Slf4jInfoOutputStream(log))
