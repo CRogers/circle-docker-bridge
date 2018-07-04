@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import uk.callumr.circledockerbridge.docker.ContainerId;
+import uk.callumr.circledockerbridge.docker.Docker;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -24,9 +25,9 @@ public abstract class CircleDockerBridgeShould {
 
         Thread.sleep(1000);
 
-        int originalHostPort = 39888;
+        ContainerId containerId = DockerTestUtils.dockerRun("-p", "8000", "skyscanner/httpbin");
 
-        ContainerId containerId = DockerTestUtils.dockerRun("-p", "39888:8000", "skyscanner/httpbin");
+        int originalHostPort = new Docker().exposedPortsForContainer(containerId).ports().keySet().iterator().next().portNumber();
 
         DockerTestUtils.definitelyKillContainerAfter(containerId, () -> {
             try {
