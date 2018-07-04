@@ -75,6 +75,7 @@ public class CircleDockerBridge {
         HostPort mappedPort = portMappingFunction.apply(hostPort);
         log.info("Creating TCP socket at port {}", mappedPort.portNumber());
         try (ServerSocket waitSocket = new ServerSocket(mappedPort.portNumber())) {
+            waitSocket.setReuseAddress(true);
             while (true) {
                 Socket socket = waitSocket.accept();
                 tcpServers.submit(() -> {

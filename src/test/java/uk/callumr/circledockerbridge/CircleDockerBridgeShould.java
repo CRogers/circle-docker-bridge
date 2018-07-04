@@ -42,7 +42,7 @@ public abstract class CircleDockerBridgeShould {
         int mappedPort = portMadeFor(originalHostPort);
 
         log.info("Original host port: {}, mapped host port: {}", originalHostPort, mappedPort);
-        
+
         DockerTestUtils.definitelyKillContainerAfter(containerId, () -> await()
                 .atMost(10, TimeUnit.SECONDS)
                 .pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
