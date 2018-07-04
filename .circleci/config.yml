@@ -94,7 +94,7 @@ jobs:
           - v1-dependencies-test-
           - v1-dependencies-
 
-      - run: ./gradlew --no-daemon -i test --test *.aot.*
+      - run: ./gradlew --no-daemon -i test --tests *.aot.*
 
       - save_cache:
           paths:
@@ -126,7 +126,7 @@ jobs:
           - v1-dependencies-test-
           - v1-dependencies-
 
-      - run: ./gradlew --no-daemon -i test --test *.local.*
+      - run: ./gradlew --no-daemon -i test --tests *.local.*
 
       - save_cache:
           paths:
