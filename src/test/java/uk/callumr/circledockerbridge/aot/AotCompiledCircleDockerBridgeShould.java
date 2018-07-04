@@ -9,7 +9,7 @@ import uk.callumr.circledockerbridge.CircleDockerBridgeShould;
 import java.io.IOException;
 
 public class AotCompiledCircleDockerBridgeShould extends CircleDockerBridgeShould {
-    private final Logger log = LoggerFactory.getLogger(AotCompiledCircleDockerBridgeShould.class);
+    private static final Logger log = LoggerFactory.getLogger(AotCompiledCircleDockerBridgeShould.class);
 
     @Override
     protected void startBridge() {

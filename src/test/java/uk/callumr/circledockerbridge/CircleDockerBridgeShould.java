@@ -3,6 +3,8 @@ package uk.callumr.circledockerbridge;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.callumr.circledockerbridge.docker.ContainerId;
 import uk.callumr.circledockerbridge.docker.Docker;
 
@@ -13,7 +15,7 @@ import java.net.URL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class CircleDockerBridgeShould {
-
+    private static final Logger log = LoggerFactory.getLogger(CircleDockerBridgeShould.class);
 
     protected abstract void startBridge();
 
@@ -28,12 +30,17 @@ public abstract class CircleDockerBridgeShould {
         ContainerId containerId = DockerTestUtils.dockerRun("-p", "8000", "skyscanner/httpbin");
 
         int originalHostPort = new Docker().exposedPortsForContainer(containerId).ports().keySet().iterator().next().portNumber();
+        int mappedPort = portMadeFor(originalHostPort);
+
+        log.info("Original host port: {}, mapped host port: {}", originalHostPort, mappedPort);
+
+        System.out.println("mappedPort = " + mappedPort);
 
         DockerTestUtils.definitelyKillContainerAfter(containerId, () -> {
             try {
                 Thread.sleep(1000);
 
-                HttpURLConnection httpGet = (HttpURLConnection) new URL(String.format("http://localhost:%d/get?yolo=hi", portMadeFor(originalHostPort))).openConnection();
+                HttpURLConnection httpGet = (HttpURLConnection) new URL(String.format("http://localhost:%d/get?yolo=hi", mappedPort)).openConnection();
                 String response = IOUtils.toString(httpGet.getInputStream());
                 String yoloValue = new ObjectMapper().readTree(response)
                         .get("args")
