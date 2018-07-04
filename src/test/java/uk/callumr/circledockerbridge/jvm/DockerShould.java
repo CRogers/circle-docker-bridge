@@ -1,6 +1,8 @@
 package uk.callumr.circledockerbridge.jvm;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
+import uk.callumr.circledockerbridge.DockerImages;
 import uk.callumr.circledockerbridge.DockerTestUtils;
 import uk.callumr.circledockerbridge.docker.*;
 
@@ -12,16 +14,23 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.callumr.circledockerbridge.DockerImages.BUSYBOX;
+import static uk.callumr.circledockerbridge.DockerImages.CROGERS_EXPOSED_PORT;
 
 public class DockerShould {
 
     private final Docker docker = new Docker();
 
+    @BeforeClass
+    public static void pullAll() {
+        DockerImages.pullAll();
+    }
+
     @Test
     public void produce_events_when_a_container_is_created_and_destroyed() {
         Stream<ContainerEvent> events = docker.createdAndDestroyedContainers();
 
-        ContainerId containerId = DockerTestUtils.dockerRun("busybox", "true");
+        ContainerId containerId = DockerTestUtils.dockerRun(BUSYBOX.name(), "true");
 
         assertThat(events.limit(2)).containsExactly(
                 ContainerEvents.created(containerId),
@@ -35,7 +44,7 @@ public class DockerShould {
                 "-p", "23499:4777",
                 "-p", "41119:2000",
                 "-p", "31313:2000",
-                "crogers/exposed-port-not-opened-behind-it",
+                CROGERS_EXPOSED_PORT.name(),
                 "sleep", "999999999");
 
         DockerTestUtils.definitelyKillContainerAfter(containerId, () -> {
@@ -75,7 +84,7 @@ public class DockerShould {
 
         ContainerId containerId = null;
         try {
-            containerId = DockerTestUtils.dockerRun("busybox", "sleep", "99999999");
+            containerId = DockerTestUtils.dockerRun(BUSYBOX.name(), "sleep", "99999999");
             docker.connectContainerToNetwork(containerId, networkAlias);
         } finally {
             if (containerId != null) {
@@ -106,7 +115,7 @@ public class DockerShould {
 
     @Test
     public void exec_a_command_in_a_container_and_get_back_stdout_stdin() {
-        ContainerId containerId = docker.run(ContainerName.of("busybox"), "sleep", "999999");
+        ContainerId containerId = docker.run(BUSYBOX, "sleep", "999999");
 
         try {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -122,7 +131,7 @@ public class DockerShould {
         DockerTestUtils.docker(true, "network", "create", networkAlias.alias());
         ContainerId containerId = null;
         try {
-            containerId = DockerTestUtils.dockerRun("--network", networkAlias.alias(), "busybox", "sleep", "999999");
+            containerId = DockerTestUtils.dockerRun("--network", networkAlias.alias(), BUSYBOX.name(), "sleep", "999999");
             containerConsumer.accept(containerId);
         } finally {
             if (containerId != null) {

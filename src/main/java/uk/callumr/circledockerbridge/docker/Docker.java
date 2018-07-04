@@ -111,8 +111,8 @@ public class Docker {
                 containerId.id()).outputUTF8().trim();
     }
 
-    public ContainerId run(ContainerName containerName, String... args) {
-        Stream<String> fullArgs = Stream.concat(Stream.of("run", "-d", "--rm", containerName.name()), Arrays.stream(args));
+    public ContainerId run(ImageName imageName, String... args) {
+        Stream<String> fullArgs = Stream.concat(Stream.of("run", "-d", "--rm", imageName.name()), Arrays.stream(args));
 
         return ContainerId.of(
                 docker(fullArgs).outputUTF8().trim());

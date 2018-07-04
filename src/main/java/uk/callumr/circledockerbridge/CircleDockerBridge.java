@@ -17,7 +17,7 @@ import java.util.function.Function;
 public class CircleDockerBridge {
     private static Logger log = LoggerFactory.getLogger(CircleDockerBridge.class);
 
-    private static final ContainerName BUSYBOX = ContainerName.of("busybox");
+    private static final ImageName BUSYBOX = ImageName.of("busybox");
 
     private final Function<HostPort, HostPort> portMappingFunction;
     private final Docker docker = new Docker();
