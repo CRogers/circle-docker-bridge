@@ -53,7 +53,7 @@ public class CircleDockerBridge {
                     log.info("Container {} created - it's ports are: {}", containerId.shortId(), portMapping);
 
                     NetworkAlias originalNetwork = docker.networkForContainer(containerId);
-                    NetworkAlias ourNetwork = originalNetwork.append("-circle-bridge" + UUID.randomUUID().toString().substring(0, 6));
+                    NetworkAlias ourNetwork = originalNetwork.append("-circle-bridge-" + UUID.randomUUID().toString().substring(0, 6));
                     docker.createNetwork(ourNetwork);
 
                     docker.connectContainerToNetwork(containerId, ourNetwork);
