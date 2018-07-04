@@ -101,6 +101,9 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-test-{{ checksum "build.gradle" }}
 
+      - store_test_results:
+          path: build/test-results
+
   test-jvm:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -132,6 +135,9 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-test-{{ checksum "build.gradle" }}
+
+      - store_test_results:
+          path: build/test-results
 
 
 workflows:
