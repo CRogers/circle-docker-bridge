@@ -1,5 +1,6 @@
 package uk.callumr.circledockerbridge.docker;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import java.util.stream.Stream;
 
 public class Docker {
     private static Logger log = LoggerFactory.getLogger(Docker.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public Stream<ContainerEvent> createdAndDestroyedContainers() {
         Process process;
@@ -51,45 +53,43 @@ public class Docker {
     }
 
     public PortMapping exposedPortsForContainer(ContainerId containerId) {
-        ProcessResult processResult;
-
-        try {
-            processResult = new ProcessExecutor()
-                    .command(
-                            "docker",
-                            "inspect",
-                            "--format", "{{json .NetworkSettings.Ports}}",
-                            containerId.id())
-                    .readOutput(true)
-                    .exitValue(0)
-                    .execute();
-        } catch (IOException | InterruptedException | TimeoutException e) {
-            throw new RuntimeException(e);
-        }
-
-        return PortMapping.fromDockerJson(processResult.outputUTF8());
+        return PortMapping.fromDockerJson(readTree(inspectContainer(containerId, "{{json .NetworkSettings.Ports}}")));
     }
 
     public NetworkAlias networkForContainer(ContainerId containerId) {
+        String output = inspectContainer(containerId, "{{json .NetworkSettings.Networks}}");
+
+        String networkAlias = readTree(output)
+                .fields().next()
+                .getKey();
+
+        return NetworkAlias.of(networkAlias);
+
+    }
+
+    private String inspectContainer(ContainerId containerId, String format) {
         try {
             ProcessResult processResult = new ProcessExecutor()
                     .command(
                             "docker",
                             "inspect",
-                            "--format", "{{json .NetworkSettings.Networks}}",
+                            "--format", format,
                             containerId.id())
                     .readOutput(true)
                     .exitValue(0)
                     .execute();
 
-            String networkAlias = new ObjectMapper().readTree(processResult.outputUTF8())
-                    .fields().next()
-                    .getKey();
-
-            return NetworkAlias.of(networkAlias);
+            return processResult.outputUTF8();
         } catch (IOException | InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    private JsonNode readTree(String output) {
+        try {
+            return OBJECT_MAPPER.readTree(output);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
