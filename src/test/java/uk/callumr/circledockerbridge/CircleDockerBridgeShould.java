@@ -34,7 +34,7 @@ public abstract class CircleDockerBridgeShould {
     public void expose_a_port_with_a_host_port_exposed_that_can_be_used_to_talk_to_the_container() throws InterruptedException {
         startBridge();
 
-        Thread.sleep(1000);
+        Thread.sleep(5000);
 
         ContainerId containerId = DockerTestUtils.dockerRun("-p", "8000", SKYSCANNER_HTTPBIN.name());
 
