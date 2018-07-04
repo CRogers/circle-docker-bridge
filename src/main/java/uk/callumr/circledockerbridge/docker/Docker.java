@@ -7,9 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -87,6 +85,25 @@ public class Docker {
                 String.format("{{ (index .NetworkSettings.Networks \"%s\").IPAddress }}", networkAlias.alias())));
     }
 
+    public void exec(ContainerId containerId, OutputStream stdout, InputStream stdin, String... args) {
+        try {
+            List<String> command = Stream.concat(
+                    Stream.of("docker", "exec", "-i", containerId.id()),
+                    Arrays.stream(args)
+            ).collect(Collectors.toList());
+
+            new ProcessExecutor()
+                    .command(command)
+                    .exitValue(0)
+                    .redirectOutput(stdout)
+                    .redirectInput(stdin)
+                    .readOutput(true)
+                    .executeNoTimeout();
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private String inspectContainer(ContainerId containerId, String format) {
         return docker(
                 "inspect",
@@ -95,11 +112,14 @@ public class Docker {
     }
 
     private ProcessResult docker(String... args) {
-        try {
+        return docker(Arrays.stream(args));
+    }
 
+    private ProcessResult docker(Stream<String> args) {
+        try {
             List<String> command = Stream.concat(
                     Stream.of("docker"),
-                    Arrays.stream(args)
+                    args
             ).collect(Collectors.toList());
 
             return new ProcessExecutor()

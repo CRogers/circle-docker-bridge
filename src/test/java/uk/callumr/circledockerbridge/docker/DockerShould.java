@@ -6,7 +6,10 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -112,6 +115,20 @@ public class DockerShould {
         docker.removeNetwork(networkAlias);
 
         assertThat(docker(true, "network", "ls")).doesNotContain(networkAlias.alias());
+    }
+
+    @Test
+    public void exec_a_command_in_a_container_and_get_back_stdout_stdin() {
+        ContainerId containerId = dockerRun("busybox", "sleep", "999999");
+
+        try {
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            ByteArrayInputStream input = new ByteArrayInputStream("yolo".getBytes(StandardCharsets.UTF_8));
+            docker.exec(containerId, output, input, "cat");
+            assertThat(new String(output.toByteArray(), StandardCharsets.UTF_8)).isEqualTo("yolo");
+        } finally {
+            killContainer(containerId);
+        }
     }
 
     private void withContainerConnectedToNetwork(NetworkAlias networkAlias, Consumer<ContainerId> containerConsumer) {
