@@ -1,7 +1,8 @@
-package uk.callumr.circledockerbridge.docker;
+package uk.callumr.circledockerbridge.jvm;
 
 import org.junit.Test;
 import uk.callumr.circledockerbridge.DockerTestUtils;
+import uk.callumr.circledockerbridge.docker.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

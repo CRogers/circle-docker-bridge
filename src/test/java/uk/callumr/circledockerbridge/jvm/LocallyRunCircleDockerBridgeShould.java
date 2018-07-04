@@ -1,5 +1,7 @@
-package uk.callumr.circledockerbridge;
+package uk.callumr.circledockerbridge.jvm;
 
+import uk.callumr.circledockerbridge.CircleDockerBridge;
+import uk.callumr.circledockerbridge.CircleDockerBridgeShould;
 import uk.callumr.circledockerbridge.docker.HostPort;
 
 public class LocallyRunCircleDockerBridgeShould extends CircleDockerBridgeShould {

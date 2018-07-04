@@ -34,7 +34,7 @@ jobs:
           paths:
             - build/libs
 
-  compile-native-image:
+  compile-native:
     docker:
       - image: tenshi/graalvm-native-image
         entrypoint:
@@ -69,6 +69,38 @@ jobs:
           paths:
             - build/native
 
+  test-native:
+    docker:
+      - image: circleci/openjdk:8-jdk
+
+    working_directory: ~/repo
+
+    environment:
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+
+    steps:
+      - checkout
+
+      - setup_remote_docker
+
+      - attach_workspace:
+          at: .
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-test-{{ checksum "build.gradle" }}
+          - v1-dependencies-{{ checksum "build.gradle" }}
+          - v1-dependencies-test-
+          - v1-dependencies-
+
+      - run: ./gradlew --no-daemon -i test --test *.aot.*
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-test-{{ checksum "build.gradle" }}
+
   test-jvm:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -94,7 +126,7 @@ jobs:
           - v1-dependencies-test-
           - v1-dependencies-
 
-      - run: ./gradlew --no-daemon -i test
+      - run: ./gradlew --no-daemon -i test --test *.local.*
 
       - save_cache:
           paths:
@@ -107,7 +139,10 @@ workflows:
   build:
     jobs:
       - jar
-      - compile-native-image:
+      - compile-native:
           requires:
             - jar
+      - test-native:
+          requires:
+            - compile-native
       - test-jvm
