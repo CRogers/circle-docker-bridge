@@ -91,6 +91,11 @@ public class Docker {
         }
     }
 
+    public NetworkScopedIpAddress ipAddressForContainerInNetwork(ContainerId containerId, NetworkAlias networkAlias) {
+        return NetworkScopedIpAddress.of(inspectContainer(containerId,
+                String.format("{{ (index .NetworkSettings.Networks \"%s\").IPAddress }}", networkAlias.alias())));
+    }
+
     private String inspectContainer(ContainerId containerId, String format) {
         try {
             ProcessResult processResult = new ProcessExecutor()
@@ -103,7 +108,7 @@ public class Docker {
                     .exitValue(0)
                     .execute();
 
-            return processResult.outputUTF8();
+            return processResult.outputUTF8().trim();
         } catch (IOException | InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         }

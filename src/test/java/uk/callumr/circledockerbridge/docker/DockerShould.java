@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,19 +61,9 @@ public class DockerShould {
     @Test
     public void get_the_network_used_by_a_docker_container() {
         NetworkAlias networkAlias = NetworkAlias.of(randomString());
-        docker(true, "network", "create", networkAlias.alias());
 
-        ContainerId containerId = null;
-        try {
-            containerId = dockerRun("--network", networkAlias.alias(), "busybox", "sleep", "999999");
-
-            assertThat(docker.networkForContainer(containerId)).isEqualTo(networkAlias);
-        } finally {
-            if (containerId != null) {
-                killContainer(containerId);
-            }
-            removeNetwork(networkAlias);
-        }
+        withContainerConnectedToNetwork(networkAlias, containerId ->
+                assertThat(docker.networkForContainer(containerId)).isEqualTo(networkAlias));
     }
 
     @Test
@@ -96,6 +87,30 @@ public class DockerShould {
         try {
             containerId = dockerRun("busybox", "sleep", "99999999");
             docker.connectContainerToNetwork(containerId, networkAlias);
+        } finally {
+            if (containerId != null) {
+                killContainer(containerId);
+            }
+            removeNetwork(networkAlias);
+        }
+    }
+
+    @Test
+    public void see_what_ip_address_a_container_has_for_a_network() {
+        NetworkAlias networkAlias = NetworkAlias.of(randomString());
+
+        withContainerConnectedToNetwork(networkAlias, containerId -> {
+            NetworkScopedIpAddress networkScopedIpAddress = docker.ipAddressForContainerInNetwork(containerId, networkAlias);
+            System.out.println("networkScopedIpAddress = " + networkScopedIpAddress);
+        });
+    }
+
+    private void withContainerConnectedToNetwork(NetworkAlias networkAlias, Consumer<ContainerId> containerConsumer) {
+        docker(true, "network", "create", networkAlias.alias());
+        ContainerId containerId = null;
+        try {
+            containerId = dockerRun("--network", networkAlias.alias(), "busybox", "sleep", "999999");
+            containerConsumer.accept(containerId);
         } finally {
             if (containerId != null) {
                 killContainer(containerId);
