@@ -5,10 +5,8 @@ import uk.callumr.circledockerbridge.DockerTestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -19,7 +17,7 @@ public class DockerShould {
     private final Docker docker = new Docker();
 
     @Test
-    public void produce_events_when_a_container_is_created_and_destroyed() throws InterruptedException, IOException, TimeoutException {
+    public void produce_events_when_a_container_is_created_and_destroyed() {
         Stream<ContainerEvent> events = docker.createdAndDestroyedContainers();
 
         ContainerId containerId = DockerTestUtils.dockerRun("busybox", "true");
@@ -31,7 +29,7 @@ public class DockerShould {
     }
 
     @Test
-    public void get_the_exposed_ports_for_a_container() throws InterruptedException, TimeoutException, IOException {
+    public void get_the_exposed_ports_for_a_container() {
         ContainerId containerId = DockerTestUtils.dockerRun(
                 "-p", "23499:4777",
                 "-p", "41119:2000",
@@ -107,7 +105,7 @@ public class DockerShould {
 
     @Test
     public void exec_a_command_in_a_container_and_get_back_stdout_stdin() {
-        ContainerId containerId = DockerTestUtils.dockerRun("busybox", "sleep", "999999");
+        ContainerId containerId = docker.run(ContainerName.of("busybox"), "sleep", "999999");
 
         try {
             ByteArrayOutputStream output = new ByteArrayOutputStream();

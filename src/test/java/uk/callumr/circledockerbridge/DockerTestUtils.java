@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import uk.callumr.circledockerbridge.docker.ContainerId;
-import uk.callumr.circledockerbridge.docker.DockerShould;
 import uk.callumr.circledockerbridge.docker.NetworkAlias;
 
 import java.io.IOException;
@@ -19,7 +18,7 @@ public enum DockerTestUtils {
     ;
 
 
-    private static final Logger log = LoggerFactory.getLogger(DockerShould.class);
+    private static final Logger log = LoggerFactory.getLogger(DockerTestUtils.class);
 
     public static String removeNetwork(NetworkAlias networkAlias) {
         return docker(true, "network", "rm", networkAlias.alias());
@@ -33,7 +32,7 @@ public enum DockerTestUtils {
 
         ContainerId containerId = ContainerId.of(docker(false, command));
 
-        log.info("Created container with id '{}'", containerId.id());
+        log.info("Created container with id '{}'", containerId.shortId());
 
         return containerId;
     }
@@ -67,11 +66,17 @@ public enum DockerTestUtils {
     public static void killContainer(ContainerId containerId) {
         docker(true, "kill", containerId.id());
 
-        log.info("Kill container with id '{}'", containerId.id());
+        log.info("Kill container with id '{}'", containerId.shortId());
     }
 
     public static void definitelyKillContainerAfter(ContainerId containerId, Runnable runnable) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> killContainer(containerId)));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                killContainer(containerId);
+            } catch (RuntimeException e) {
+                // ignore
+            }
+        }));
 
         try {
             runnable.run();

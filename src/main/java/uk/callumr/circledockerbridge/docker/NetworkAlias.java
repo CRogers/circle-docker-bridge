@@ -6,6 +6,10 @@ import org.immutables.value.Value;
 public interface NetworkAlias {
     String alias();
 
+    default NetworkAlias append(String suffix) {
+        return of(alias() + suffix);
+    }
+
     static NetworkAlias of(String id) {
         return ImmutableNetworkAlias.builder()
                 .alias(id)

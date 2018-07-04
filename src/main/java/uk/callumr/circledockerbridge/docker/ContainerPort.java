@@ -15,4 +15,8 @@ public interface ContainerPort {
     static ContainerPort fromBindingSpec(String bindingSpec) {
         return of(Integer.parseInt(bindingSpec.split("/")[0]));
     }
+
+    default String asString() {
+        return Integer.toString(portNumber());
+    }
 }
