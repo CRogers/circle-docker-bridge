@@ -70,19 +70,36 @@ public class DockerShould {
         } finally {
             if (containerId != null) {
                 killContainer(containerId);
-                removeNetwork(networkAlias);
             }
+            removeNetwork(networkAlias);
         }
     }
 
     @Test
     public void create_a_network() {
         NetworkAlias networkAlias = NetworkAlias.of(randomString());
-        try {
-            docker.createNetwork(networkAlias);
+        docker.createNetwork(networkAlias);
 
+        try {
             assertThat(docker(true, "network", "ls")).contains(networkAlias.alias());
         } finally {
+            removeNetwork(networkAlias);
+        }
+    }
+
+    @Test
+    public void connect_a_container_to_the_network() {
+        NetworkAlias networkAlias = NetworkAlias.of(randomString());
+        docker.createNetwork(networkAlias);
+
+        ContainerId containerId = null;
+        try {
+            containerId = dockerRun("busybox", "sleep", "99999999");
+            docker.connectContainerToNetwork(containerId, networkAlias);
+        } finally {
+            if (containerId != null) {
+                killContainer(containerId);
+            }
             removeNetwork(networkAlias);
         }
     }

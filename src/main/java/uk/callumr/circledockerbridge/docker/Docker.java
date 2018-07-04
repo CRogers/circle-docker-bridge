@@ -79,6 +79,18 @@ public class Docker {
         }
     }
 
+    public void connectContainerToNetwork(ContainerId containerId, NetworkAlias networkAlias) {
+        try {
+            new ProcessExecutor()
+                    .command("docker", "network", "connect", networkAlias.alias(), containerId.id())
+                    .exitValue(0)
+                    .readOutput(true)
+                    .execute();
+        } catch (IOException | InterruptedException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private String inspectContainer(ContainerId containerId, String format) {
         try {
             ProcessResult processResult = new ProcessExecutor()
@@ -104,5 +116,4 @@ public class Docker {
             throw new RuntimeException(e);
         }
     }
-
 }
