@@ -105,6 +105,15 @@ public class DockerShould {
         });
     }
 
+    @Test
+    public void remove_a_network() {
+        NetworkAlias networkAlias = NetworkAlias.of(randomString());
+        docker.createNetwork(networkAlias);
+        docker.removeNetwork(networkAlias);
+
+        assertThat(docker(true, "network", "ls")).doesNotContain(networkAlias.alias());
+    }
+
     private void withContainerConnectedToNetwork(NetworkAlias networkAlias, Consumer<ContainerId> containerConsumer) {
         docker(true, "network", "create", networkAlias.alias());
         ContainerId containerId = null;

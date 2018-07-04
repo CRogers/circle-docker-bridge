@@ -74,6 +74,10 @@ public class Docker {
         docker("network", "create", networkAlias.alias());
     }
 
+    public void removeNetwork(NetworkAlias networkAlias) {
+        docker("network", "remove", networkAlias.alias());
+    }
+
     public void connectContainerToNetwork(ContainerId containerId, NetworkAlias networkAlias) {
         docker("network", "connect", networkAlias.alias(), containerId.id());
     }
