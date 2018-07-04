@@ -39,19 +39,14 @@ public class DockerShould {
                 "crogers/exposed-port-not-opened-behind-it",
                 "sleep", "999999999");
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> DockerTestUtils.killContainer(containerId)));
-
-        try {
+        DockerTestUtils.definitelyKillContainerAfter(containerId, () -> {
             PortMapping portMapping = docker.exposedPortsForContainer(containerId);
-
             assertThat(portMapping).isEqualTo(PortMapping.builder()
                     .putPorts(HostPort.of(23499), ContainerPort.of(4777))
                     .putPorts(HostPort.of(41119), ContainerPort.of(2000))
                     .putPorts(HostPort.of(31313), ContainerPort.of(2000))
                     .build());
-        } finally {
-            DockerTestUtils.killContainer(containerId);
-        }
+        });
     }
 
     @Test

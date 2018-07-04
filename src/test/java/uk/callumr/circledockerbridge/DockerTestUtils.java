@@ -69,4 +69,14 @@ public enum DockerTestUtils {
 
         log.info("Kill container with id '{}'", containerId.id());
     }
+
+    public static void definitelyKillContainerAfter(ContainerId containerId, Runnable runnable) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> killContainer(containerId)));
+
+        try {
+            runnable.run();
+        } finally {
+            killContainer(containerId);
+        }
+    }
 }

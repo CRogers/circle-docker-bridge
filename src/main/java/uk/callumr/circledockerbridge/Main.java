@@ -2,11 +2,12 @@ package uk.callumr.circledockerbridge;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.callumr.circledockerbridge.docker.ContainerEvents;
 import uk.callumr.circledockerbridge.docker.Docker;
-import uk.callumr.circledockerbridge.docker.PortMapping;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -25,19 +26,6 @@ public class Main {
         }
 
         Docker docker = new Docker();
-
-        docker.createdAndDestroyedContainers().forEach(containerEvent -> {
-            ContainerEvents.caseOf(containerEvent)
-                    .created(containerId -> {
-                        PortMapping portMapping = docker.exposedPortsForContainer(containerId);
-                        log.info("Ports for newly created container {}: {}", containerId.id(), portMapping);
-                        return null;
-                    })
-                    .destroyed(containerId -> {
-                        log.info("Container {} destroyed", containerId.id());
-                        return null;
-                    });
-        });
 
         log.info("Stopped");
     }

@@ -12,10 +12,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Value.Immutable
-public abstract class PortMapping {
-    protected abstract Map<HostPort, ContainerPort> ports();
+public interface PortMapping {
+    Map<HostPort, ContainerPort> ports();
 
-    public static PortMapping fromDockerJson(JsonNode json) {
+    static PortMapping fromDockerJson(JsonNode json) {
         Map<HostPort, ContainerPort> portMapping = EntryStream.of(json.fields())
                 .mapKeys(ContainerPort::fromBindingSpec)
                 .mapValues(possiblyNullHostPorts -> {
@@ -40,9 +40,9 @@ public abstract class PortMapping {
                 .build();
     }
 
-    public static class Builder extends ImmutablePortMapping.Builder {}
+    class Builder extends ImmutablePortMapping.Builder {}
 
-    public static Builder builder() {
+    static Builder builder() {
         return new Builder();
     }
 }
